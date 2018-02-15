@@ -74,11 +74,12 @@
 .. _nose: http://somethingaboutorange.com/mrl/projects/nose
 .. _`python coverage tester`: http://nedbatchelder.com/code/modules/coverage.html
 .. _cython: http://cython.org
+.. _travis-ci: https://travis-ci.org/
 
 .. Other python projects
 .. _numpy: http://numpy.scipy.org
 .. _scipy: http://www.scipy.org
-.. _ipython: http://ipython.scipy.org
+.. _IPython: http://www.ipython.org/
 .. _`ipython manual`: http://ipython.scipy.org/doc/manual/html
 .. _matplotlib: http://matplotlib.sourceforge.net
 .. _pythonxy: http://www.pythonxy.com
@@ -144,6 +145,7 @@
 .. _powershell: http://www.microsoft.com/powershell
 .. _msysgit: http://code.google.com/p/msysgit
 .. _putty: http://www.chiark.greenend.org.uk/~sgtatham/putty
+.. _visualstudiobuildtools: http://landinghub.visualstudio.com/visual-cpp-build-tools
 
 .. Functional imaging labs
 .. _`functional imaging laboratory`: http://www.fil.ion.ucl.ac.uk

@@ -21,7 +21,7 @@ As an example, lets take a 2d image where the affine is::
      [0., 2., 0.],
      [0., 0., 1.]]
 
-The pixels of an image with this affine would look something like:
+The pixels of an image with this affine would look something like::
 
     A------------
     |   |   |   |
@@ -53,46 +53,24 @@ from warnings import warn
 
 from nibabel.affines import apply_affine
 from scipy.spatial.distance import cdist
+from numpy import ravel_multi_index
 
 from dipy.core.geometry import dist_to_corner
 
 from collections import defaultdict
-from ..utils.six.moves import xrange, map
+from dipy.utils.six.moves import xrange, map
 
 import numpy as np
 from numpy import (asarray, ceil, dot, empty, eye, sqrt)
 from dipy.io.bvectxt import ornt_mapping
 from dipy.tracking import metrics
-from .vox2track import _streamlines_in_mask
+from dipy.tracking.vox2track import _streamlines_in_mask
+from dipy.testing import setup_test
 
 # Import helper functions shared with vox2track
-from ._utils import (_mapping_to_voxel, _to_voxel_coordinates)
+from dipy.tracking._utils import (_mapping_to_voxel, _to_voxel_coordinates)
 from dipy.io.bvectxt import orientation_from_string
 import nibabel as nib
-
-
-def _rmi(index, dims):
-    """An alternate implementation of numpy.ravel_multi_index for older
-    versions of numpy.
-
-    Assumes array layout is C contiguous
-    """
-    # Upcast to integer type capable of holding largest array index
-    index = np.asarray(index, dtype=np.intp)
-    dims = np.asarray(dims)
-    if index.ndim > 2:
-        raise ValueError("Index should be 1 or 2-D")
-    elif index.ndim == 2:
-        index = index.T
-    if (index >= dims).any():
-        raise ValueError("Index exceeds dimensions")
-    strides = np.r_[dims[:0:-1].cumprod()[::-1], 1]
-    return (strides * index).sum(-1)
-
-try:
-    from numpy import ravel_multi_index
-except ImportError:
-    ravel_multi_index = _rmi
 
 
 def density_map(streamlines, vol_dims, voxel_size=None, affine=None):
@@ -240,11 +218,8 @@ def ndbincount(x, weights=None, shape=None):
         shape = x.max(1) + 1
 
     x = ravel_multi_index(x, shape)
-    # out = np.bincount(x, weights, minlength=np.prod(shape))
-    # out.shape = shape
-    # Use resize to be compatible with numpy < 1.6, minlength new in 1.6
-    out = np.bincount(x, weights)
-    out.resize(shape)
+    out = np.bincount(x, weights, minlength=np.prod(shape))
+    out.shape = shape
 
     return out
 

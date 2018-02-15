@@ -1,4 +1,4 @@
-''' Fvtk module implements simple visualization functions using VTK.
+""" Fvtk module implements simple visualization functions using VTK.
 
 The main idea is the following:
 A window can have one or more renderers. A renderer can have none,
@@ -16,7 +16,7 @@ Examples
 
 For more information on VTK there many neat examples in
 http://www.vtk.org/Wiki/VTK/Tutorials/External_Tutorials
-'''
+"""
 from __future__ import division, print_function, absolute_import
 from warnings import warn
 
@@ -39,6 +39,8 @@ if have_matplotlib:
     get_cmap = cm.get_cmap
 else:
     from dipy.data import get_cmap
+
+from dipy.viz.colormap import create_colormap
 
 # a track buffer used only with picking tracks
 track_buffer = []
@@ -67,207 +69,28 @@ if have_vtk:
 
     from dipy.viz.window import (ren, renderer, add, clear, rm, rm_all,
                                  show, record, snapshot)
-    from dipy.viz.actor import line, streamtube, slicer, axes
+    from dipy.viz.actor import line, streamtube, slicer, axes, dots, point
 
     try:
-        from vtk import vtkVolumeTextureMapper2D
+        if major_version < 7:
+            from vtk import vtkVolumeTextureMapper2D as VolumeMapper
+        else:
+            from vtk import vtkSmartVolumeMapper as VolumeMapper
         have_vtk_texture_mapper2D = True
     except:
         have_vtk_texture_mapper2D = False
 
 else:
-    msg = "Python VTK is not installed"
-    warn(msg)
+    ren, have_ren, _ = optional_package('dipy.viz.window.ren',
+                                        'Python VTK is not installed')
 
 
-def dots(points, color=(1, 0, 0), opacity=1, dot_size=5):
-    """ Create one or more 3d points
 
-    Parameters
-    ----------
-    points : ndarray, (N, 3)
-    color : tuple (3,)
-    opacity : float
-    dot_size : int
-
-    Returns
-    --------
-    vtkActor
-
-    See Also
-    ---------
-    dipy.viz.fvtk.point
-
-    """
-
-    if points.ndim == 2:
-        points_no = points.shape[0]
-    else:
-        points_no = 1
-
-    polyVertexPoints = vtk.vtkPoints()
-    polyVertexPoints.SetNumberOfPoints(points_no)
-    aPolyVertex = vtk.vtkPolyVertex()
-    aPolyVertex.GetPointIds().SetNumberOfIds(points_no)
-
-    cnt = 0
-    if points.ndim > 1:
-        for point in points:
-            polyVertexPoints.InsertPoint(cnt, point[0], point[1], point[2])
-            aPolyVertex.GetPointIds().SetId(cnt, cnt)
-            cnt += 1
-    else:
-        polyVertexPoints.InsertPoint(cnt, points[0], points[1], points[2])
-        aPolyVertex.GetPointIds().SetId(cnt, cnt)
-        cnt += 1
-
-    aPolyVertexGrid = vtk.vtkUnstructuredGrid()
-    aPolyVertexGrid.Allocate(1, 1)
-    aPolyVertexGrid.InsertNextCell(aPolyVertex.GetCellType(),
-                                   aPolyVertex.GetPointIds())
-
-    aPolyVertexGrid.SetPoints(polyVertexPoints)
-    aPolyVertexMapper = vtk.vtkDataSetMapper()
-    if major_version <= 5:
-        aPolyVertexMapper.SetInput(aPolyVertexGrid)
-    else:
-        aPolyVertexMapper.SetInputData(aPolyVertexGrid)
-    aPolyVertexActor = vtk.vtkActor()
-    aPolyVertexActor.SetMapper(aPolyVertexMapper)
-
-    aPolyVertexActor.GetProperty().SetColor(color)
-    aPolyVertexActor.GetProperty().SetOpacity(opacity)
-    aPolyVertexActor.GetProperty().SetPointSize(dot_size)
-    return aPolyVertexActor
-
-
-def point(points, colors, opacity=1, point_radius=0.1, theta=8, phi=8):
-    """ Visualize points as sphere glyphs
-
-    Parameters
-    ----------
-    points : ndarray, shape (N, 3)
-    colors : ndarray (N,3) or tuple (3,)
-    point_radius : float
-    theta : int
-    phi : int
-
-    Returns
-    -------
-    vtkActor
-
-    Examples
-    --------
-    >>> from dipy.viz import fvtk
-    >>> ren = fvtk.ren()
-    >>> pts = np.random.rand(5, 3)
-    >>> point_actor = fvtk.point(pts, fvtk.colors.coral)
-    >>> fvtk.add(ren, point_actor)
-    >>> #fvtk.show(ren)
-    """
-
-    if np.array(colors).ndim == 1:
-        # return dots(points,colors,opacity)
-        colors = np.tile(colors, (len(points), 1))
-
-    scalars = vtk.vtkUnsignedCharArray()
-    scalars.SetNumberOfComponents(3)
-
-    pts = vtk.vtkPoints()
-    cnt_colors = 0
-
-    for p in points:
-
-        pts.InsertNextPoint(p[0], p[1], p[2])
-        scalars.InsertNextTuple3(
-            round(255 * colors[cnt_colors][0]),
-            round(255 * colors[cnt_colors][1]),
-            round(255 * colors[cnt_colors][2]))
-        cnt_colors += 1
-
-    src = vtk.vtkSphereSource()
-    src.SetRadius(point_radius)
-    src.SetThetaResolution(theta)
-    src.SetPhiResolution(phi)
-
-    polyData = vtk.vtkPolyData()
-    polyData.SetPoints(pts)
-    polyData.GetPointData().SetScalars(scalars)
-
-    glyph = vtk.vtkGlyph3D()
-    glyph.SetSourceConnection(src.GetOutputPort())
-    if major_version <= 5:
-        glyph.SetInput(polyData)
-    else:
-        glyph.SetInputData(polyData)
-    glyph.SetColorModeToColorByScalar()
-    glyph.SetScaleModeToDataScalingOff()
-    glyph.Update()
-
-    mapper = vtk.vtkPolyDataMapper()
-    if major_version <= 5:
-        mapper.SetInput(glyph.GetOutput())
-    else:
-        mapper.SetInputData(glyph.GetOutput())
-    actor = vtk.vtkActor()
-    actor.SetMapper(mapper)
-    actor.GetProperty().SetOpacity(opacity)
-
-    return actor
-
-
-def label(ren, text='Origin', pos=(0, 0, 0), scale=(0.2, 0.2, 0.2),
-          color=(1, 1, 1)):
-    ''' Create a label actor.
-
-    This actor will always face the camera
-
-    Parameters
-    ----------
-    ren : vtkRenderer() object
-       Renderer as returned by ``ren()``.
-    text : str
-        Text for the label.
-    pos : (3,) array_like, optional
-        Left down position of the label.
-    scale : (3,) array_like
-        Changes the size of the label.
-    color : (3,) array_like
-        Label color as ``(r,g,b)`` tuple.
-
-    Returns
-    -------
-    l : vtkActor object
-        Label.
-
-    Examples
-    --------
-    >>> from dipy.viz import fvtk
-    >>> r=fvtk.ren()
-    >>> l=fvtk.label(r)
-    >>> fvtk.add(r,l)
-    >>> #fvtk.show(r)
-    '''
-    atext = vtk.vtkVectorText()
-    atext.SetText(text)
-
-    textm = vtk.vtkPolyDataMapper()
-    if major_version <= 5:
-        textm.SetInput(atext.GetOutput())
-    else:
-        textm.SetInputData(atext.GetOutput())
-
-    texta = vtk.vtkFollower()
-    texta.SetMapper(textm)
-    texta.SetScale(scale)
-
-    texta.GetProperty().SetColor(color)
-    texta.SetPosition(pos)
-
-    ren.AddActor(texta)
-    texta.SetCamera(ren.GetActiveCamera())
-
-    return texta
+deprecation_msg = ("Module 'dipy.viz.fvtk' is deprecated as of version"
+                   " 0.14 of dipy and will be removed in a future version."
+                   " Please, instead use module 'dipy.viz.window' or "
+                   " 'dipy.viz.actor'.")
+warn(DeprecationWarning(deprecation_msg))
 
 
 def volume(vol, voxsz=(1.0, 1.0, 1.0), affine=None, center_origin=1,
@@ -514,7 +337,7 @@ def volume(vol, voxsz=(1.0, 1.0, 1.0), affine=None, center_origin=1,
 
         if info:
             print('mapper VolumeTextureMapper2D')
-        mapper = vtk.vtkVolumeTextureMapper2D()
+        mapper = VolumeMapper()  # vtk.vtkVolumeTextureMapper2D()
         if affine is None:
             if major_version <= 5:
                 mapper.SetInput(im)
@@ -685,55 +508,6 @@ def contour(vol, voxsz=(1.0, 1.0, 1.0), affine=None, levels=[50],
         del skinExtractor
 
     return ass
-
-
-lowercase_cm_name = {'blues': 'Blues', 'accent': 'Accent'}
-
-
-def create_colormap(v, name='jet', auto=True):
-    """Create colors from a specific colormap and return it
-    as an array of shape (N,3) where every row gives the corresponding
-    r,g,b value. The colormaps we use are similar with those of pylab.
-
-    Parameters
-    ----------
-    v : (N,) array
-        vector of values to be mapped in RGB colors according to colormap
-    name : str.
-        Name of the colormap. Currently implemented: 'jet', 'blues',
-        'accent', 'bone' and matplotlib colormaps if you have matplotlib
-        installed.
-    auto : bool,
-        if auto is True then v is interpolated to [0, 10] from v.min()
-        to v.max()
-
-    Notes
-    -----
-    Dipy supports a few colormaps for those who do not use Matplotlib, for
-    more colormaps consider downloading Matplotlib.
-
-    """
-
-    if v.ndim > 1:
-        msg = 'This function works only with 1d arrays. Use ravel()'
-        raise ValueError(msg)
-
-    if auto:
-        v = np.interp(v, [v.min(), v.max()], [0, 1])
-    else:
-        v = np.clip(v, 0, 1)
-
-    # For backwards compatibility with lowercase names
-    newname = lowercase_cm_name.get(name) or name
-
-    colormap = get_cmap(newname)
-    if colormap is None:
-        e_s = "Colormap '%s' is not yet implemented " % name
-        raise ValueError(e_s)
-
-    rgba = colormap(v)
-    rgb = rgba[:, :3].copy()
-    return rgb
 
 
 def _makeNd(array, ndim):
@@ -1055,6 +829,56 @@ def tensor(evals, evecs, scalar_colors=None,
     actor.SetMapper(mapper)
 
     return actor
+
+
+def label(ren, text='Origin', pos=(0, 0, 0), scale=(0.2, 0.2, 0.2),
+          color=(1, 1, 1)):
+    """ Create a label actor.
+    This actor will always face the camera
+    Parameters
+    ----------
+    ren : vtkRenderer() object
+       Renderer as returned by ``ren()``.
+    text : str
+        Text for the label.
+    pos : (3,) array_like, optional
+        Left down position of the label.
+    scale : (3,) array_like
+        Changes the size of the label.
+    color : (3,) array_like
+        Label color as ``(r,g,b)`` tuple.
+    Returns
+    -------
+    l : vtkActor object
+        Label.
+    Examples
+    --------
+    >>> from dipy.viz import fvtk
+    >>> r=fvtk.ren()
+    >>> l=fvtk.label(r)
+    >>> fvtk.add(r,l)
+    >>> #fvtk.show(r)
+    """
+    atext = vtk.vtkVectorText()
+    atext.SetText(text)
+
+    textm = vtk.vtkPolyDataMapper()
+    if major_version <= 5:
+        textm.SetInput(atext.GetOutput())
+    else:
+        textm.SetInputData(atext.GetOutput())
+
+    texta = vtk.vtkFollower()
+    texta.SetMapper(textm)
+    texta.SetScale(scale)
+
+    texta.GetProperty().SetColor(color)
+    texta.SetPosition(pos)
+
+    ren.AddActor(texta)
+    texta.SetCamera(ren.GetActiveCamera())
+
+    return texta
 
 
 def camera(ren, pos=None, focal=None, viewup=None, verbose=True):

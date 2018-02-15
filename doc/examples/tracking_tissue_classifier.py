@@ -34,10 +34,13 @@ from dipy.reconst.csdeconv import (ConstrainedSphericalDeconvModel,
                                    auto_response)
 from dipy.tracking.local import LocalTracking
 from dipy.tracking import utils
-from dipy.viz import fvtk
+from dipy.viz import window, actor
 from dipy.viz.colormap import line_colors
 
-ren = fvtk.ren()
+# Enables/disables interactive visualization
+interactive = False
+
+ren = window.Renderer()
 
 hardi_img, gtab, labels_img = read_stanford_labels()
 _, _, img_pve_wm = read_stanford_pve_maps()
@@ -97,7 +100,7 @@ mask_fa = FA.copy()
 mask_fa[mask_fa < 0.2] = 0
 plt.xticks([])
 plt.yticks([])
-plt.imshow(mask_fa[:, :, data.shape[2] / 2].T, cmap='gray', origin='lower',
+plt.imshow(mask_fa[:, :, data.shape[2] // 2].T, cmap='gray', origin='lower',
            interpolation='nearest')
 fig.tight_layout()
 fig.savefig('threshold_fa.png')
@@ -123,10 +126,12 @@ save_trk("deterministic_threshold_classifier_all.trk",
 
 streamlines = [sl for sl in all_streamlines_threshold_classifier]
 
-fvtk.clear(ren)
-fvtk.add(ren, fvtk.line(streamlines, line_colors(streamlines)))
-fvtk.record(ren, out_path='all_streamlines_threshold_classifier.png',
-            size=(600, 600))
+window.clear(ren)
+ren.add(actor.line(streamlines, line_colors(streamlines)))
+window.record(ren, out_path='all_streamlines_threshold_classifier.png',
+              size=(600, 600))
+if interactive:
+    window.show(ren)
 
 """
 .. figure:: all_streamlines_threshold_classifier.png
@@ -165,7 +170,7 @@ fig = plt.figure()
 plt.xticks([])
 plt.yticks([])
 fig.tight_layout()
-plt.imshow(white_matter[:, :, data.shape[2] / 2].T, cmap='gray', origin='lower',
+plt.imshow(white_matter[:, :, data.shape[2] // 2].T, cmap='gray', origin='lower',
            interpolation='nearest')
 fig.savefig('white_matter_mask.png')
 
@@ -189,10 +194,12 @@ save_trk("deterministic_binary_classifier_all.trk",
          labels.shape)
 
 streamlines = [sl for sl in all_streamlines_binary_classifier]
-fvtk.clear(ren)
-fvtk.add(ren, fvtk.line(streamlines, line_colors(streamlines)))
-fvtk.record(ren, out_path='all_streamlines_binary_classifier.png',
-            size=(600, 600))
+window.clear(ren)
+ren.add(actor.line(streamlines, line_colors(streamlines)))
+window.record(ren, out_path='all_streamlines_binary_classifier.png',
+              size=(600, 600))
+if interactive:
+    window.show(ren)
 
 """
 .. figure:: all_streamlines_binary_classifier.png
@@ -205,26 +212,26 @@ fvtk.record(ren, out_path='all_streamlines_binary_classifier.png',
 ACT Tissue Classifier
 ---------------------
 Anatomically-constrained tractography (ACT) [Smith2012]_ uses information from
-anatomical images to determine when the tractography stops. The 'include_map'
+anatomical images to determine when the tractography stops. The ``include_map``
 defines when the streamline reached a 'valid' stopping region (e.g. gray
-matter partial volume estimation (PVE) map) and the 'exclude_map' defines when
+matter partial volume estimation (PVE) map) and the ``exclude_map`` defines when
 the streamline reached an 'invalid' stopping region (e.g. corticospinal fluid
 PVE map). The background of the anatomical image should be added to the
-'include_map' to keep streamlines exiting the brain (e.g. through the
+``include_map`` to keep streamlines exiting the brain (e.g. through the
 brain stem). The ACT tissue classifier uses a trilinear interpolation
 at the tracking position.
 
 **Parameters**
 
-- include_map: numpy array [:, :, :],
-- exclude_map: numpy array [:, :, :],
+- ``include_map``: numpy array ``[:, :, :]``,
+- ``exclude_map``: numpy array ``[:, :, :]``,
 
 **Stopping criterion**
 
-- 'ENDPOINT': include_map > 0.5,
-- 'OUTSIDEIMAGE': tracking point outside of include_map or exclude_map,
+- 'ENDPOINT': ``include_map`` > 0.5,
+- 'OUTSIDEIMAGE': tracking point outside of ``include_map`` or ``exclude_map``,
 - 'TRACKPOINT': no direction is available,
-- 'INVALIDPOINT': exclude_map > 0.5.
+- 'INVALIDPOINT': ``exclude_map`` > 0.5.
 """
 
 from dipy.tracking.local import ActTissueClassifier
@@ -246,12 +253,12 @@ fig = plt.figure()
 plt.subplot(121)
 plt.xticks([])
 plt.yticks([])
-plt.imshow(include_map[:, :, data.shape[2] / 2].T, cmap='gray', origin='lower',
+plt.imshow(include_map[:, :, data.shape[2] // 2].T, cmap='gray', origin='lower',
            interpolation='nearest')
 plt.subplot(122)
 plt.xticks([])
 plt.yticks([])
-plt.imshow(exclude_map[:, :, data.shape[2] / 2].T, cmap='gray', origin='lower',
+plt.imshow(exclude_map[:, :, data.shape[2] // 2].T, cmap='gray', origin='lower',
            interpolation='nearest')
 fig.tight_layout()
 fig.savefig('act_maps.png')
@@ -277,10 +284,12 @@ save_trk("deterministic_act_classifier_all.trk",
 
 streamlines = [sl for sl in all_streamlines_act_classifier]
 
-fvtk.clear(ren)
-fvtk.add(ren, fvtk.line(streamlines, line_colors(streamlines)))
-fvtk.record(ren, out_path='all_streamlines_act_classifier.png',
-            size=(600, 600))
+window.clear(ren)
+ren.add(actor.line(streamlines, line_colors(streamlines)))
+window.record(ren, out_path='all_streamlines_act_classifier.png',
+              size=(600, 600))
+if interactive:
+    window.show(ren)
 
 """
 .. figure:: all_streamlines_act_classifier.png
@@ -303,10 +312,12 @@ save_trk("deterministic_act_classifier_valid.trk",
 
 streamlines = [sl for sl in valid_streamlines_act_classifier]
 
-fvtk.clear(ren)
-fvtk.add(ren, fvtk.line(streamlines, line_colors(streamlines)))
-fvtk.record(ren, out_path='valid_streamlines_act_classifier.png',
-            size=(600, 600))
+window.clear(ren)
+ren.add(actor.line(streamlines, line_colors(streamlines)))
+window.record(ren, out_path='valid_streamlines_act_classifier.png',
+              size=(600, 600))
+if interactive:
+    window.show(ren)
 
 """
 .. figure:: valid_streamlines_act_classifier.png

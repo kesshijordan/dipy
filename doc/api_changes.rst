@@ -5,6 +5,16 @@ API changes
 Here we provide information about functions or classes that have been removed,
 renamed or are deprecated (not recommended) during different release circles.
 
+Dipy 0.13 Changes
+-----------------
+
+No major API changes.
+
+**Notes**
+
+``dipy.viz.fvtk`` module will be deprecated on release 0.14. Use ``dipy.viz.ui`` instead.
+``dipy.io.trackvis`` module will be deprecated on release 0.14. Use ``dipy.io.streamline`` instead.
+
 Dipy 0.12 Changes
 -----------------
 **Dropped support for Python 2.6***
@@ -16,11 +26,28 @@ users upgrade to Python 2.7 or newer to use Dipy.
 
 
 **Tracking**
+
 ``probabilistic_direction_getter.ProbabilisticDirectionGetter`` input parameters
 have changed. Now the optional parameter ``pmf_threshold=0.1`` (previously fixed
 to 0.0) removes directions with probability lower than ``pmf_threshold`` from
 the probability mass function (pmf) when selecting the tracking direction.
 
+**DKI**
+
+Default of DKI model fitting was changed from "OLS" to "WLS".
+
+The default max_kurtosis of the functions axial_kurtosis, mean_kurtosis,
+radial_kurotis was changed from 3 to 10.
+
+**Visualization**
+
+Prefer using the UI elements in ``dipy.viz.ui`` rather than
+``dipy.viz.widgets``.
+
+**IO**
+
+Use the module ``nibabel.streamlines`` for saving trk files and not
+``nibabel.trackvis``. Requires upgrading to nibabel 2+.
 
 Dipy 0.10 Changes
 -----------------
@@ -95,10 +122,10 @@ transform instead of a voxel sizes array. Please update all code using
 ``target`` in a way similar to this ::
 
     img = nib.load(anat)
-    voxel_dim = img.get_header()['pixdim'][1:4]
+    voxel_dim = img.header['pixdim'][1:4]
     streamlines = utils.target(streamlines, img.get_data(), voxel_dim)
 
 to something similar to ::
 
     img = nib.load(anat)
-    streamlines = utils.target(streamlines, img.get_data(), img.get_affine())
+    streamlines = utils.target(streamlines, img.get_data(), img.affine)

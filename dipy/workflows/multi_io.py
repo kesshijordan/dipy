@@ -5,7 +5,7 @@ import os.path as path
 from glob import glob
 
 from dipy.utils.six import string_types
-
+from dipy.workflows.base import get_args_default
 
 def common_start(sa, sb):
     """ Returns the longest common substring from the beginning of sa and sb """
@@ -134,10 +134,10 @@ def io_iterator(inputs, out_dir, fnames, output_strategy='append',
         output_strategy : string
             Controls the behavior of the IOIterator for output paths.
         mix_names : bool
-            Whether or not to append a mix of input names at the begining.
+            Whether or not to append a mix of input names at the beginning.
     Returns
     -------
-        Properly instanciated IOIterator object.
+        Properly instantiated IOIterator object.
     """
     io_it = IOIterator(output_strategy=output_strategy, mix_names=mix_names)
     io_it.set_inputs(*inputs)
@@ -162,19 +162,16 @@ def io_iterator_(frame, fnc, output_strategy='append', mix_names=False):
         output_strategy : string
             Controls the behavior of the IOIterator for output paths.
         mix_names : bool
-            Whether or not to append a mix of input names at the begining.
+            Whether or not to append a mix of input names at the beginning.
     Returns
     -------
-        Properly instanciated IOIterator object.
+        Properly instantiated IOIterator object.
     """
     args, _, _, values = inspect.getargvalues(frame)
     args.remove('self')
     del values['self']
 
-    specs = inspect.getargspec(fnc)
-    spargs = specs.args
-    spargs.remove('self')
-    defaults = specs.defaults
+    spargs, defaults = get_args_default(fnc)
 
     len_args = len(spargs)
     len_defaults = len(defaults)

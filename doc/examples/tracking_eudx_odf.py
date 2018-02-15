@@ -5,7 +5,7 @@ Deterministic Tracking with EuDX on ODF Peaks
 =============================================
 
 .. NOTE::
-    Dipy has updated tools for fiber tracking. Our new machinery for fiber
+    DIPY has updated tools for fiber tracking. Our new machinery for fiber
     tracking is featured in the example titled Introduction to Basic Tracking.
     The tools demonstrated in this example are no longer actively being
     maintained and will likely be deprecated at some point.
@@ -61,25 +61,30 @@ csa_sl_fname = 'csa_streamline.trk'
 nib.trackvis.write(csa_sl_fname, csa_streamlines_trk, hdr, points_space='voxel')
 
 """
-Visualize the streamlines with fvtk (python vtk is required).
+Visualize the streamlines with `dipy.viz` module (python vtk is required).
 """
 
-from dipy.viz import fvtk
+from dipy.viz import window, actor
 from dipy.viz.colormap import line_colors
 
-r = fvtk.ren()
+# Enables/disables interactive visualization
+interactive = False
 
-fvtk.add(r, fvtk.line(csa_streamlines, line_colors(csa_streamlines)))
+ren = window.Renderer()
+
+ren.add(actor.line(csa_streamlines, line_colors(csa_streamlines)))
 
 print('Saving illustration as tensor_tracks.png')
 
-fvtk.record(r, n_frames=1, out_path='csa_tracking.png', size=(600, 600))
+window.record(ren, out_path='csa_tracking.png', size=(600, 600))
+if interactive:
+    window.show(ren)
 
 """
 .. figure:: csa_tracking.png
    :align: center
 
-   **Deterministic streamlines with EuDX on ODF peaks field modulated by GFA**.
+   Deterministic streamlines with EuDX on ODF peaks field modulated by GFA.
 
 It is also possible to use EuDX with multiple ODF peaks, which is very helpful when
 tracking in crossing areas.
@@ -94,19 +99,21 @@ eu = EuDX(csapeaks.peak_values,
 
 csa_streamlines_mult_peaks = [streamline for streamline in eu]
 
-fvtk.clear(r)
+window.clear(ren)
 
-fvtk.add(r, fvtk.line(csa_streamlines_mult_peaks, line_colors(csa_streamlines_mult_peaks)))
+ren.add(actor.line(csa_streamlines_mult_peaks, line_colors(csa_streamlines_mult_peaks)))
 
 print('Saving illustration as csa_tracking_mpeaks.png')
 
-fvtk.record(r, n_frames=1, out_path='csa_tracking_mpeaks.png', size=(600, 600))
+window.record(ren, out_path='csa_tracking_mpeaks.png', size=(600, 600))
+if interactive:
+    window.show(ren)
 
 """
 .. figure:: csa_tracking_mpeaks.png
    :align: center
 
-   **Deterministic streamlines with EuDX on multiple ODF peaks**.
+   Deterministic streamlines with EuDX on multiple ODF peaks.
 
 .. [Garyfallidis12] Garyfallidis E., "Towards an accurate brain tractography", PhD thesis, University of Cambridge, 2012.
 

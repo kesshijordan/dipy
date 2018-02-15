@@ -1,11 +1,12 @@
 """
+.. _streamline_tools:
 
 =========================================================
 Connectivity Matrices, ROI Intersections and Density Maps
 =========================================================
 
 This example is meant to be an introduction to some of the streamline tools
-available in dipy. Some of the functions covered in this example are
+available in dipy_. Some of the functions covered in this example are
 ``target``, ``connectivity_matrix`` and ``density_map``. ``target`` allows one
 to filter streamlines that either pass through or do not pass through some
 region of the brain, ``connectivity_matrix`` groups and counts streamlines
@@ -88,39 +89,46 @@ other_streamlines = list(other_streamlines)
 assert len(other_streamlines) + len(cc_streamlines) == len(streamlines)
 
 """
-We can use some of dipy's visualization tools to display the ROI we targeted
+We can use some of dipy_'s visualization tools to display the ROI we targeted
 above and all the streamlines that pass though that ROI. The ROI is the yellow
 region near the center of the axial image.
 """
 
-from dipy.viz import fvtk
+from dipy.viz import window, actor
 from dipy.viz.colormap import line_colors
+
+# Enables/disables interactive visualization
+interactive = False
 
 # Make display objects
 color = line_colors(cc_streamlines)
-cc_streamlines_actor = fvtk.line(cc_streamlines, line_colors(cc_streamlines))
-cc_ROI_actor = fvtk.contour(cc_slice, levels=[1], colors=[(1., 1., 0.)],
-                            opacities=[1.])
+cc_streamlines_actor = actor.line(cc_streamlines, line_colors(cc_streamlines))
+cc_ROI_actor = actor.contour_from_roi(cc_slice, color=(1., 1., 0.),
+                                      opacity=0.5)
 
-vol_actor = fvtk.slicer(t1_data)
+vol_actor = actor.slicer(t1_data)
 
-vol_actor.display(40, None, None)
+vol_actor.display(x=40)
 vol_actor2 = vol_actor.copy()
-vol_actor2.display(None, None, 35)
+vol_actor2.display(z=35)
 
 # Add display objects to canvas
-r = fvtk.ren()
-fvtk.add(r, vol_actor)
-fvtk.add(r, vol_actor2)
-fvtk.add(r, cc_streamlines_actor)
-fvtk.add(r, cc_ROI_actor)
+r = window.Renderer()
+r.add(vol_actor)
+r.add(vol_actor2)
+r.add(cc_streamlines_actor)
+r.add(cc_ROI_actor)
 
 # Save figures
-fvtk.record(r, n_frames=1, out_path='corpuscallosum_axial.png',
-            size=(800, 800))
-fvtk.camera(r, [-1, 0, 0], [0, 0, 0], viewup=[0, 0, 1])
-fvtk.record(r, n_frames=1, out_path='corpuscallosum_sagittal.png',
-            size=(800, 800))
+window.record(r, n_frames=1, out_path='corpuscallosum_axial.png',
+              size=(800, 800))
+if interactive:
+    window.show(r)
+r.set_camera(position=[-1, 0, 0], focal_point=[0, 0, 0], view_up=[0, 0, 1])
+window.record(r, n_frames=1, out_path='corpuscallosum_sagittal.png',
+              size=(800, 800))
+if interactive:
+    window.show(r)
 
 """
 .. figure:: corpuscallosum_axial.png
@@ -208,7 +216,7 @@ visualized together. In order to save the streamlines in a ".trk" file we'll
 need to move them to "trackvis space", or the representation of streamlines
 specified by the trackvis Track File format.
 
-To do that, we will use tools available in [nibabel](http://nipy.org/nibabel)
+To do that, we will use tools available in `nibabel <http://nipy.org/nibabel>`_)
 """
 
 import nibabel as nib
@@ -236,7 +244,7 @@ nib.trackvis.write("lr-superiorfrontal.trk", for_save, trackvis_header)
 
 """
 Let's take a moment here to consider the representation of streamlines used in
-dipy. Streamlines are a path though the 3d space of an image represented by a
+DIPY. Streamlines are a path though the 3D space of an image represented by a
 set of points. For these points to have a meaningful interpretation, these
 points must be given in a known coordinate system. The ``affine`` attribute of
 the ``streamline_generator`` object specifies the coordinate system of the
@@ -270,11 +278,12 @@ image.
 .. rubric:: Footnotes
 
 .. [#] The image `aparc-reduced.nii.gz`, which we load as ``labels_img``, is a
-    modified version of label map `aparc+aseg.mgz` created by freesurfer.  The
-    corpus callosum region is a combination of the freesurfer labels 251-255.
-    The remaining freesurfer labels were re-mapped and reduced so that they lie
-    between 0 and 88. To see the freesurfer region, label and name, represented
-    by each value see `label_info.txt` in `~/.dipy/stanford_hardi`.
+    modified version of label map `aparc+aseg.mgz` created by `FreeSurfer
+    <https://surfer.nmr.mgh.harvard.edu/>`_. The corpus callosum region is a
+    combination of the FreeSurfer labels 251-255. The remaining FreeSurfer
+    labels were re-mapped and reduced so that they lie between 0 and 88. To
+    see the FreeSurfer region, label and name, represented by each value see
+   `label_info.txt` in `~/.dipy/stanford_hardi`.
 .. [#] An affine transformation is a mapping between two coordinate systems
     that can represent scaling, rotation, sheer, translation and reflection.
     Affine transformations are often represented using a 4x4 matrix where the

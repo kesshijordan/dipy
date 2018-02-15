@@ -4,6 +4,7 @@ from __future__ import division, print_function, absolute_import
 import math
 import numpy as np
 import numpy.linalg as npl
+from dipy.testing import setup_test
 
 # epsilon for testing whether a number is close to zero
 _EPS = np.finfo(float).eps * 4.0
@@ -125,7 +126,7 @@ def cart2sphere(x, y, z):
        azimuth angle
     '''
     r = np.sqrt(x * x + y * y + z * z)
-    theta = np.arccos(z / r)
+    theta = np.arccos(np.divide(z, r, where=r > 0))
     theta = np.where(r > 0, theta, 0.)
     phi = np.arctan2(y, x)
     r, theta, phi = np.broadcast_arrays(r, theta, phi)

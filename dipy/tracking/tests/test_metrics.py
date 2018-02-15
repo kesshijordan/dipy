@@ -1,7 +1,7 @@
 ''' Testing track_metrics module '''
 from __future__ import division, print_function, absolute_import
 
-from ...utils.six.moves import xrange
+from dipy.utils.six.moves import xrange
 
 import numpy as np
 from nose.tools import (assert_true, assert_false, assert_equal,
@@ -152,11 +152,11 @@ def test_downsample():
     Td = [tm.downsample(s[0], pts) for s in streams]
     T = [s[0] for s in streams]
 
-    from dipy.viz import fvtk
-    r = fvtk.ren()
-    fvtk.add(r, fvtk.line(T, fvtk.red))
-    fvtk.add(r, fvtk.line(Td, fvtk.green))
-    fvtk.show(r)
+    from dipy.viz import window, actor
+    ren = window.Renderer()
+    ren.add(actor.line(T, window.red))
+    ren.add(actor.line(Td, window.green))
+    window.show(ren)
     """
 
 
