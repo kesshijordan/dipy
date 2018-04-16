@@ -175,8 +175,8 @@ def slicer(data, affine=None, value_range=None, opacity=1.,
             im_actor = ImageActor()
             im_actor.input_connection(self.output)
             im_actor.SetDisplayExtent(*self.GetDisplayExtent())
-            im_actor.opacity(opacity)
-            im_actor.tolerance(picking_tol)
+            im_actor.opacity(self.GetOpacity())
+            im_actor.tolerance(self.picker.GetTolerance())
             if interpolation == 'nearest':
                 im_actor.SetInterpolate(False)
             else:
@@ -445,7 +445,11 @@ def streamtube(lines, colors=None, opacity=1, linewidth=0.1, tube_sides=9,
     poly_mapper.ScalarVisibilityOn()
     poly_mapper.SetScalarModeToUsePointFieldData()
     poly_mapper.SelectColorArray("Colors")
-    poly_mapper.GlobalImmediateModeRenderingOn()
+
+    # Enable only for OpenGL1 rendering backend
+    if vtk.VTK_MAJOR_VERSION <= 6:
+        poly_mapper.GlobalImmediateModeRenderingOn()
+
     poly_mapper.Update()
 
     # Color Scale with a lookup table
@@ -465,10 +469,14 @@ def streamtube(lines, colors=None, opacity=1, linewidth=0.1, tube_sides=9,
         actor = vtk.vtkActor()
 
     actor.SetMapper(poly_mapper)
-    actor.GetProperty().SetAmbient(0.1)
-    actor.GetProperty().SetDiffuse(0.15)
-    actor.GetProperty().SetSpecular(0.05)
-    actor.GetProperty().SetSpecularPower(6)
+
+    # Use different defaults for OpenGL1 rendering backend
+    if vtk.VTK_MAJOR_VERSION <= 6:
+        actor.GetProperty().SetAmbient(0.1)
+        actor.GetProperty().SetDiffuse(0.15)
+        actor.GetProperty().SetSpecular(0.05)
+        actor.GetProperty().SetSpecularPower(6)
+
     actor.GetProperty().SetInterpolationToPhong()
     actor.GetProperty().BackfaceCullingOn()
     actor.GetProperty().SetOpacity(opacity)
