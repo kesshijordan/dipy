@@ -1,7 +1,6 @@
 """
 ==================================
 Calculate Path Length Map
-(e.g. For Anisotropic Radiation Therapy Contours)
 ==================================
 
 We show how to calculate a Path Length Map given a set of streamlines and a
@@ -33,8 +32,9 @@ from mpl_toolkits.axes_grid1 import AxesGrid
 
 """
 First, we need to generate some streamlines and visualize. For a more complete
-description of these steps, please refer to the CSA Probabilistic Tracking and
-the Visualization of ROI Surface Rendered with Streamlines Tutorials.
+description of these steps, please refer to the
+:ref:`introduction_to_basic_tracking` and
+the :ref:`viz_roi_contour` Tutorials.
 
 """
 
